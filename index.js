@@ -83,11 +83,16 @@ async function run() {
       });
     });
 
-    // 6️⃣ PUT - Like recipe (increment likeCount)
+    // 6️⃣ PUT - Like recipe (unlimited likes allowed)
     app.put("/recipes/:id/like", async (req, res) => {
       const { id } = req.params;
-      const { userEmail } = req.body; // Optional: prevent user liking own recipe
+      const { userEmail } = req.body;
+
       const recipe = await recipesCollection.findOne({ _id: new ObjectId(id) });
+
+      if (!recipe) {
+        return res.status(404).send({ message: "Recipe not found" });
+      }
 
       if (recipe.userEmail === userEmail) {
         return res
@@ -95,60 +100,21 @@ async function run() {
           .send({ message: "You cannot like your own recipe" });
       }
 
+      // ✅ শুধু count বাড়বে, likedBy আর দরকার নেই
       const result = await recipesCollection.updateOne(
         { _id: new ObjectId(id) },
         { $inc: { likeCount: 1 } }
       );
+
+      const updatedRecipe = await recipesCollection.findOne({
+        _id: new ObjectId(id),
+      });
+
       res.send({
         message: "Recipe liked!",
-        modifiedCount: result.modifiedCount,
+        likeCount: updatedRecipe.likeCount || 0,
       });
     });
-
-    // PATCH /recipes/:id/like
-    // app.patch("/recipes/:id/like", async (req, res) => {
-    //   const { id } = req.params;
-    //   const { userEmail } = req.body;
-
-    //   try {
-    //     const recipe = await recipesCollection.findOne({
-    //       _id: new ObjectId(id),
-    //     });
-
-    //     if (!recipe)
-    //       return res.status(404).send({ message: "Recipe not found" });
-    //     if (recipe.userEmail === userEmail) {
-    //       return res
-    //         .status(400)
-    //         .send({ message: "Can't like your own recipe" });
-    //     }
-
-    //     let updatedLikedBy = recipe.likedBy || [];
-    //     let likeCount = recipe.likeCount || 0;
-
-    //     if (updatedLikedBy.includes(userEmail)) {
-    //       // unlike
-    //       updatedLikedBy = updatedLikedBy.filter(
-    //         (email) => email !== userEmail
-    //       );
-    //       likeCount--;
-    //     } else {
-    //       // like
-    //       updatedLikedBy.push(userEmail);
-    //       likeCount++;
-    //     }
-
-    //     await recipesCollection.updateOne(
-    //       { _id: new ObjectId(id) },
-    //       { $set: { likedBy: updatedLikedBy, likeCount } }
-    //     );
-
-    //     res.send({ likeCount, likedBy: updatedLikedBy });
-    //   } catch (err) {
-    //     console.error(err);
-    //     res.status(500).send({ message: "Server error" });
-    //   }
-    // });
   } catch (err) {
     console.error("❌ Mongo Error:", err);
   }
