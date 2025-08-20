@@ -24,7 +24,7 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
     console.log("✅ MongoDB Connected");
 
     const db = client.db("recipeBookDB");
@@ -106,49 +106,49 @@ async function run() {
     });
 
     // PATCH /recipes/:id/like
-    app.patch("/recipes/:id/like", async (req, res) => {
-      const { id } = req.params;
-      const { userEmail } = req.body;
+    // app.patch("/recipes/:id/like", async (req, res) => {
+    //   const { id } = req.params;
+    //   const { userEmail } = req.body;
 
-      try {
-        const recipe = await recipesCollection.findOne({
-          _id: new ObjectId(id),
-        });
+    //   try {
+    //     const recipe = await recipesCollection.findOne({
+    //       _id: new ObjectId(id),
+    //     });
 
-        if (!recipe)
-          return res.status(404).send({ message: "Recipe not found" });
-        if (recipe.userEmail === userEmail) {
-          return res
-            .status(400)
-            .send({ message: "Can't like your own recipe" });
-        }
+    //     if (!recipe)
+    //       return res.status(404).send({ message: "Recipe not found" });
+    //     if (recipe.userEmail === userEmail) {
+    //       return res
+    //         .status(400)
+    //         .send({ message: "Can't like your own recipe" });
+    //     }
 
-        let updatedLikedBy = recipe.likedBy || [];
-        let likeCount = recipe.likeCount || 0;
+    //     let updatedLikedBy = recipe.likedBy || [];
+    //     let likeCount = recipe.likeCount || 0;
 
-        if (updatedLikedBy.includes(userEmail)) {
-          // unlike
-          updatedLikedBy = updatedLikedBy.filter(
-            (email) => email !== userEmail
-          );
-          likeCount--;
-        } else {
-          // like
-          updatedLikedBy.push(userEmail);
-          likeCount++;
-        }
+    //     if (updatedLikedBy.includes(userEmail)) {
+    //       // unlike
+    //       updatedLikedBy = updatedLikedBy.filter(
+    //         (email) => email !== userEmail
+    //       );
+    //       likeCount--;
+    //     } else {
+    //       // like
+    //       updatedLikedBy.push(userEmail);
+    //       likeCount++;
+    //     }
 
-        await recipesCollection.updateOne(
-          { _id: new ObjectId(id) },
-          { $set: { likedBy: updatedLikedBy, likeCount } }
-        );
+    //     await recipesCollection.updateOne(
+    //       { _id: new ObjectId(id) },
+    //       { $set: { likedBy: updatedLikedBy, likeCount } }
+    //     );
 
-        res.send({ likeCount, likedBy: updatedLikedBy });
-      } catch (err) {
-        console.error(err);
-        res.status(500).send({ message: "Server error" });
-      }
-    });
+    //     res.send({ likeCount, likedBy: updatedLikedBy });
+    //   } catch (err) {
+    //     console.error(err);
+    //     res.status(500).send({ message: "Server error" });
+    //   }
+    // });
   } catch (err) {
     console.error("❌ Mongo Error:", err);
   }
